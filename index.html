@@ -241,7 +241,7 @@
     .nav{ flex-direction:row; margin-bottom:0; }
     .sev-chip-list, .stats-title, .stat-row{ display:none; }
     .sidebar-spacer{ display:none; }
-    .reset-btn, .save-indicator{ display:none; }
+    .save-indicator{ display:none; }
     .panel{ padding:22px 16px 60px; }
     .field-row, .field-row3{ grid-template-columns:1fr; }
     .report-page{ padding:34px 22px; }
@@ -283,6 +283,9 @@
     </nav>
     <div id="sidebarStats"></div>
     <div class="sidebar-spacer"></div>
+    <button class="reset-btn" id="downloadBackupBtn">⬇ Unduh cadangan (.json)</button>
+    <button class="reset-btn" id="uploadBackupBtn">⬆ Muat dari cadangan</button>
+    <input type="file" id="backupFileInput" accept="application/json,.json" hidden />
     <button class="reset-btn" id="resetBtn">Reset semua data</button>
     <div class="save-indicator" id="saveIndicator">Siap.</div>
   </aside>
@@ -606,10 +609,33 @@
 
   var state = defaultState();
   var saveTimer = null;
+  // "auto"   = window.storage API tersedia (mis. dijalankan sebagai artifact di claude.ai)
+  // "manual" = API tidak tersedia (mis. file dibuka langsung di browser) -> andalkan unduh/muat cadangan
+  var storageMode = "manual";
 
-  // ---------- STORAGE ----------
+  // ---------- STORAGE (dengan fallback aman) ----------
+  function hasStorage(){
+    try{
+      return typeof window !== "undefined" && !!window.storage && typeof window.storage.get === "function" && typeof window.storage.set === "function";
+    }catch(e){ return false; }
+  }
+  function safeStorageGet(key){
+    try{ return window.storage.get(key, false); }
+    catch(e){ return Promise.reject(e); }
+  }
+  function safeStorageSet(key, value){
+    try{ return window.storage.set(key, value, false); }
+    catch(e){ return Promise.reject(e); }
+  }
+
   function loadState(){
-    return window.storage.get(STORAGE_KEY, false)
+    state = defaultState();
+    if(!hasStorage()){
+      storageMode = "manual";
+      return Promise.resolve();
+    }
+    storageMode = "auto";
+    return safeStorageGet(STORAGE_KEY)
       .then(function(res){
         if(res && res.value){
           try{
@@ -619,26 +645,69 @@
               meta: Object.assign({}, d.meta, parsed.meta || {}),
               findings: Array.isArray(parsed.findings) ? parsed.findings : []
             };
-          }catch(e){ state = defaultState(); }
+          }catch(e){ /* data tersimpan rusak, pakai default */ }
         }
       })
-      .catch(function(){ state = defaultState(); });
+      .catch(function(){ /* belum ada data tersimpan -> normal saat pertama kali dibuka */ });
   }
 
   function saveState(immediate){
     var indicator = document.getElementById("saveIndicator");
     if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
+    if(storageMode !== "auto"){
+      if(indicator) indicator.textContent = "Mode manual — klik \"Unduh cadangan\" secara berkala.";
+      return;
+    }
     var doSave = function(){
-      window.storage.set(STORAGE_KEY, JSON.stringify(state), false)
+      safeStorageSet(STORAGE_KEY, JSON.stringify(state))
         .then(function(res){
-          if(indicator) indicator.textContent = res ? "Tersimpan." : "Gagal menyimpan.";
+          if(indicator) indicator.textContent = res ? "Tersimpan otomatis." : "Gagal menyimpan otomatis.";
         })
         .catch(function(){
-          if(indicator) indicator.textContent = "Gagal menyimpan (offline?).";
+          if(indicator) indicator.textContent = "Gagal menyimpan otomatis — unduh cadangan untuk amannya.";
         });
     };
     if(indicator) indicator.textContent = "Menyimpan…";
     if(immediate){ doSave(); } else { saveTimer = setTimeout(doSave, 500); }
+  }
+
+  // ---------- CADANGAN MANUAL (JSON) ----------
+  function downloadBackup(){
+    try{
+      var blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+      var url = URL.createObjectURL(blob);
+      var stamp = (state.meta.reportDate || new Date().toISOString().slice(0,10)).replace(/[^0-9a-zA-Z-]/g,"");
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "cadangan-laporan-pentest-" + stamp + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+      showToast("Cadangan diunduh.");
+    }catch(e){ showToast("Gagal mengunduh cadangan."); }
+  }
+  function loadBackupFile(file){
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var parsed = JSON.parse(String(reader.result));
+        var d = defaultState();
+        state = {
+          meta: Object.assign({}, d.meta, parsed.meta || {}),
+          findings: Array.isArray(parsed.findings) ? parsed.findings : []
+        };
+        populateMetaForm();
+        renderFindingsList();
+        renderSidebarStats();
+        renderPreview();
+        saveState(true);
+        showToast("Cadangan dimuat.");
+      }catch(err){ showToast("File cadangan tidak valid."); }
+    };
+    reader.onerror = function(){ showToast("Gagal membaca file cadangan."); };
+    reader.readAsText(file);
   }
 
   // ---------- COMPUTED ----------
@@ -1050,41 +1119,80 @@
 
   // ---------- INIT ----------
   function init(){
-    loadState().then(function(){
-      document.querySelectorAll(".nav-item").forEach(function(b){
-        b.addEventListener("click", function(){ switchTab(b.getAttribute("data-tab")); });
-      });
-      document.getElementById("addFindingBtn").addEventListener("click", function(){ openFindingForm(null); });
-      document.getElementById("cancelFindingBtn").addEventListener("click", closeFindingForm);
-      document.getElementById("findingForm").addEventListener("submit", onFindingSubmit);
-      document.getElementById("printBtn").addEventListener("click", function(){
-        switchTab("preview");
-        setTimeout(function(){ window.print(); }, 80);
-      });
-      document.getElementById("copyMdBtn").addEventListener("click", copyMarkdown);
-      document.getElementById("resetBtn").addEventListener("click", function(){
-        if(window.confirm("Hapus SEMUA data (info laporan & seluruh temuan)? Tindakan ini tidak bisa dibatalkan.")){
-          state = defaultState();
-          saveState(true);
+    var overlay = document.getElementById("loadingOverlay");
+    var appEl = document.getElementById("app");
+
+    // Jaring pengaman: apa pun yang terjadi pada proses di bawah, layar loading
+    // dipaksa hilang setelah 2.5 detik supaya aplikasi tidak pernah "macet".
+    var revealed = false;
+    function reveal(){
+      if(revealed) return;
+      revealed = true;
+      if(overlay) overlay.style.display = "none";
+      if(appEl) appEl.style.visibility = "visible";
+    }
+    var forceReveal = setTimeout(reveal, 2500);
+
+    Promise.resolve()
+      .then(function(){ return loadState(); })
+      .catch(function(){ state = defaultState(); })
+      .then(function(){
+        try{
+          document.querySelectorAll(".nav-item").forEach(function(b){
+            b.addEventListener("click", function(){ switchTab(b.getAttribute("data-tab")); });
+          });
+          document.getElementById("addFindingBtn").addEventListener("click", function(){ openFindingForm(null); });
+          document.getElementById("cancelFindingBtn").addEventListener("click", closeFindingForm);
+          document.getElementById("findingForm").addEventListener("submit", onFindingSubmit);
+          document.getElementById("printBtn").addEventListener("click", function(){
+            switchTab("preview");
+            setTimeout(function(){ window.print(); }, 80);
+          });
+          document.getElementById("copyMdBtn").addEventListener("click", copyMarkdown);
+          document.getElementById("downloadBackupBtn").addEventListener("click", downloadBackup);
+          document.getElementById("uploadBackupBtn").addEventListener("click", function(){
+            document.getElementById("backupFileInput").click();
+          });
+          document.getElementById("backupFileInput").addEventListener("change", function(e){
+            var file = e.target.files && e.target.files[0];
+            loadBackupFile(file);
+            e.target.value = "";
+          });
+          document.getElementById("resetBtn").addEventListener("click", function(){
+            if(window.confirm("Hapus SEMUA data (info laporan & seluruh temuan)? Tindakan ini tidak bisa dibatalkan.")){
+              state = defaultState();
+              saveState(true);
+              populateMetaForm();
+              renderFindingsList();
+              renderSidebarStats();
+              renderPreview();
+              showToast("Semua data direset.");
+            }
+          });
+
           populateMetaForm();
+          bindMetaForm();
           renderFindingsList();
           renderSidebarStats();
-          renderPreview();
-          showToast("Semua data direset.");
+
+          if(storageMode !== "auto"){
+            var indicator = document.getElementById("saveIndicator");
+            if(indicator) indicator.textContent = "Mode manual — gunakan \"Unduh cadangan\".";
+          }
+        }catch(initErr){
+          // Jangan biarkan error tak terduga mencegah aplikasi tampil.
+          if(window.console) console.error("Init error:", initErr);
         }
+        clearTimeout(forceReveal);
+        reveal();
       });
-
-      populateMetaForm();
-      bindMetaForm();
-      renderFindingsList();
-      renderSidebarStats();
-
-      document.getElementById("loadingOverlay").style.display = "none";
-      document.getElementById("app").style.visibility = "visible";
-    });
   }
 
-  init();
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
 </script>
 </body>

